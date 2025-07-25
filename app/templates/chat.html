@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Chat{% endblock %}
+
+{% block content %}
+<h2 class="chat-title">Welcome, {{ current_user.username }}</h2>
+
+<!-- Search / Filter -->
+<form method="GET" class="chat-filter-form">
+    <input type="text" name="q" placeholder="Search by user or keyword" value="{{ request.args.get('q', '') }}">
+    <button type="submit">Search</button>
+</form>
+
+<div class="chat-container">
+    <!-- Chat Box -->
+    <div class="chat-box" id="chat-box">
+        {% for message in messages %}
+            {% if not message.recipient_id or message.recipient_id == current_user.id or message.user_id == current_user.id %}
+                <div class="chat-message {% if message.user.username == current_user.username %}self{% else %}other{% endif %}">
+                    <p class="chat-user">
+                        {{ message.user.username }}
+                        {% if message.recipient_id %}
+                            <span class="private-label">→ {{ message.recipient.username }} <small>(private)</small></span>
+                        {% else %}
+                            <span class="public-label"><small>(public)</small></span>
+                        {% endif %}
+                    </p>
+                    <p class="chat-text">{{ message.content }}</p>
+                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Message Input -->
+    <form method="POST" class="chat-input-form">
+        <select name="recipient">
+            <option value="">Public</option>
+            {% for user in users %}
+                {% if user.id != current_user.id %}
+                    <option value="{{ user.id }}">{{ user.username }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        <input id="message-input" type="text" name="content" placeholder="Type your message..." required autocomplete="off">
+        <button type="submit">Send</button>
+    </form>
+
+    <!-- Manual Refresh + Logout -->
+    <div class="chat-controls">
+        <form method="GET" class="chat-refresh-form">
+            <button type="submit">Refresh</button>
+        </form>
+        <a href="{{ url_for('main.logout') }}" class="logout-link">Logout</a>
+    </div>
+</div>
+
+<!-- Emoji Picker -->
+<script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.5.2/index.min.js" type="module"></script>
+<emoji-picker style="position: fixed; bottom: 80px; right: 30px;"></emoji-picker>
+
+<script>
+const picker = document.querySelector('emoji-picker');
+const input = document.getElementById('message-input');
+picker.addEventListener('emoji-click', event => {
+    input.value += event.detail.unicode;
+});
+
+// Auto-scroll on load
+window.onload = () => {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.scrollTop = chatBox.scrollHeight;
+};
+
+// Auto-refresh with smooth update
+setInterval(() => {
+    fetch(window.location.href)
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            const newChatBox = doc.querySelector("#chat-box");
+            const chatBox = document.querySelector("#chat-box");
+
+            if (newChatBox && chatBox) {
+                const isAtBottom = Math.abs(chatBox.scrollTop + chatBox.clientHeight - chatBox.scrollHeight) < 30;
+                const prevScroll = chatBox.scrollTop;
+
+                chatBox.innerHTML = newChatBox.innerHTML;
+
+                if (isAtBottom) {
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                } else {
+                    chatBox.scrollTop = prevScroll;
+                }
+            }
+        });
+}, 5000);
+</script>
+{% endblock %}
