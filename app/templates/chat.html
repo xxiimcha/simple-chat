@@ -4,6 +4,14 @@
 {% block content %}
 <h2 class="chat-title">Welcome, {{ current_user.username }}</h2>
 
+<!-- Dark Mode Toggle -->
+<div class="dark-mode-toggle">
+    <label>
+        <input type="checkbox" id="dark-toggle">
+        🌙 Dark Mode
+    </label>
+</div>
+
 <form method="GET" class="chat-filter-form">
     <input type="text" name="q" placeholder="Search by user or keyword" value="{{ request.args.get('q', '') }}">
     <button type="submit">Search</button>
@@ -24,16 +32,16 @@
                     </p>
                     <p class="chat-text">{{ message.content }}</p>
                     <span class="timestamp">
-  {{ (message.timestamp + timedelta(hours=8)).strftime('%Y-%m-%d %H:%M') }}
-</span>
+                        {{ (message.timestamp + timedelta(hours=8)).strftime('%Y-%m-%d %H:%M') }}
+                    </span>
                 </div>
             {% endif %}
         {% endfor %}
     </div>
 
-    <form method="POST" class="chat-input-form">
+    <form id="chat-form" class="chat-input-form">
         <div class="chat-input-grid">
-            <select name="recipient">
+            <select id="recipient" name="recipient">
                 <option value="">Public</option>
                 {% for user in users %}
                     {% if user.id != current_user.id %}
@@ -50,17 +58,23 @@
         </div>
     </form>
 
-
     <div class="chat-controls">
-        <form method="GET" class="chat-refresh-form">
-            <button type="submit">Refresh</button>
-        </form>
         <a href="{{ url_for('main.logout') }}" class="logout-link">Logout</a>
     </div>
 </div>
 
+<!-- Socket.IO + Emoji Picker -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.5.2/dist/emoji-picker-element.min.js"></script>
+
 <script>
+    const socket = io();
+    const chatBox = document.getElementById("chat-box");
+    const input = document.getElementById('message-input');
+    const emojiBtn = document.getElementById('emoji-btn');
+    const recipientSelect = document.getElementById('recipient');
+    const form = document.getElementById('chat-form');
+
     const picker = document.createElement('emoji-picker');
     picker.style.position = 'absolute';
     picker.style.bottom = '150px';
@@ -68,9 +82,6 @@
     picker.style.zIndex = '1000';
     picker.style.display = 'none';
     document.body.appendChild(picker);
-
-    const input = document.getElementById('message-input');
-    const emojiBtn = document.getElementById('emoji-btn');
 
     emojiBtn.addEventListener('click', () => {
         picker.style.display = (picker.style.display === 'none') ? 'block' : 'none';
@@ -86,34 +97,67 @@
             picker.style.display = 'none';
         }
     });
-</script>
 
-<script>
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = input.value.trim();
+        const recipient = recipientSelect.value;
+
+        if (message !== "") {
+            socket.emit("send_message", {
+                content: message,
+                recipient_id: recipient || null
+            });
+            input.value = "";
+        }
+    });
+
+    socket.on("receive_message", function(data) {
+        const div = document.createElement("div");
+        div.classList.add("chat-message");
+        div.classList.add(data.self ? "self" : "other");
+
+        const label = data.recipient_username
+            ? `<span class="private-label">→ ${data.recipient_username} <small>(private)</small></span>`
+            : `<span class="public-label"><small>(public)</small></span>`;
+
+        div.innerHTML = `
+            <p class="chat-user">${data.sender_username} ${label}</p>
+            <p class="chat-text">${data.content}</p>
+            <span class="timestamp">${data.timestamp}</span>
+        `;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
     window.onload = () => {
-        const chatBox = document.getElementById("chat-box");
         chatBox.scrollTop = chatBox.scrollHeight;
     };
 
-    setInterval(() => {
-        fetch(window.location.href)
-            .then(response => response.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, "text/html");
-                const newChatBox = doc.querySelector("#chat-box");
-                const chatBox = document.querySelector("#chat-box");
+    // Dark Mode Toggle
+    const darkToggle = document.getElementById('dark-toggle');
+    const root = document.documentElement;
 
-                if (newChatBox && chatBox) {
-                    const isAtBottom = Math.abs(chatBox.scrollTop + chatBox.clientHeight - chatBox.scrollHeight) < 30;
-                    const prevScroll = chatBox.scrollTop;
-                    chatBox.innerHTML = newChatBox.innerHTML;
-                    if (isAtBottom) {
-                        chatBox.scrollTop = chatBox.scrollHeight;
-                    } else {
-                        chatBox.scrollTop = prevScroll;
-                    }
-                }
-            });
-    }, 5000);
+    function applyDarkMode(isDark) {
+        if (isDark) {
+            root.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            root.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+        }
+    }
+
+    darkToggle.addEventListener('change', () => {
+        applyDarkMode(darkToggle.checked);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            darkToggle.checked = true;
+            applyDarkMode(true);
+        }
+    });
 </script>
 {% endblock %}
