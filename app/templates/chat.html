@@ -23,24 +23,33 @@
                         {% endif %}
                     </p>
                     <p class="chat-text">{{ message.content }}</p>
-                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <span class="timestamp">
+  {{ (message.timestamp + timedelta(hours=8)).strftime('%Y-%m-%d %H:%M') }}
+</span>
                 </div>
             {% endif %}
         {% endfor %}
     </div>
 
     <form method="POST" class="chat-input-form">
-        <select name="recipient">
-            <option value="">Public</option>
-            {% for user in users %}
-                {% if user.id != current_user.id %}
-                    <option value="{{ user.id }}">{{ user.username }}</option>
-                {% endif %}
-            {% endfor %}
-        </select>
-        <input id="message-input" type="text" name="content" placeholder="Type your message..." required autocomplete="off">
-        <button type="submit">Send</button>
+        <div class="chat-input-grid">
+            <select name="recipient">
+                <option value="">Public</option>
+                {% for user in users %}
+                    {% if user.id != current_user.id %}
+                        <option value="{{ user.id }}">{{ user.username }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+
+            <button type="button" id="emoji-btn">😊</button>
+
+            <input id="message-input" type="text" name="content" placeholder="Type your message..." required autocomplete="off">
+
+            <button type="submit">Send</button>
+        </div>
     </form>
+
 
     <div class="chat-controls">
         <form method="GET" class="chat-refresh-form">
@@ -50,31 +59,32 @@
     </div>
 </div>
 
-<script type="module">
-    import 'https://unpkg.com/emoji-picker-element@1.5.2/index.js';
-
+<script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.5.2/dist/emoji-picker-element.min.js"></script>
+<script>
     const picker = document.createElement('emoji-picker');
     picker.style.position = 'absolute';
-    picker.style.bottom = '120px';
+    picker.style.bottom = '150px';
     picker.style.right = '30px';
     picker.style.zIndex = '1000';
     picker.style.display = 'none';
     document.body.appendChild(picker);
 
     const input = document.getElementById('message-input');
+    const emojiBtn = document.getElementById('emoji-btn');
 
-    // Toggle picker visibility when input is focused
-    input.addEventListener('focus', () => {
-        picker.style.display = 'block';
-    });
-
-    input.addEventListener('blur', () => {
-        setTimeout(() => picker.style.display = 'none', 200);  // Allow time to click emoji
+    emojiBtn.addEventListener('click', () => {
+        picker.style.display = (picker.style.display === 'none') ? 'block' : 'none';
     });
 
     picker.addEventListener('emoji-click', event => {
         input.value += event.detail.unicode;
         input.focus();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!picker.contains(e.target) && e.target !== emojiBtn) {
+            picker.style.display = 'none';
+        }
     });
 </script>
 
@@ -106,5 +116,4 @@
             });
     }, 5000);
 </script>
-
 {% endblock %}

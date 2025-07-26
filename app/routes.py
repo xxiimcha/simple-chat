@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from .models import User, Message
 from . import db, login_manager
+from datetime import timedelta
 
 main = Blueprint('main', __name__)
 
@@ -68,4 +69,4 @@ def chat():
                     (m.recipient and q in m.recipient.username.lower())]
 
     users = User.query.all()
-    return render_template('chat.html', messages=messages, users=users)
+    return render_template("chat.html", messages=messages, users=users, timedelta=timedelta)

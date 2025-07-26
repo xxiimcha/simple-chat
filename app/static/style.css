@@ -64,19 +64,18 @@ body {
     font-size: 0.95rem;
 }
 
-
 .container {
-    max-width: 700px;
+    max-width: 750px;
     margin: auto;
     background: white;
-    padding: 25px 30px;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    padding: 30px 35px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .chat-title {
     text-align: center;
-    font-size: 1.9rem;
+    font-size: 2rem;
     font-weight: 700;
     color: #2c3e50;
     margin-bottom: 25px;
@@ -87,36 +86,30 @@ form {
 }
 
 .chat-filter-form,
-.chat-input-form {
+.chat-refresh-form {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 16px;
     flex-wrap: wrap;
     align-items: center;
 }
 
-.chat-filter-form input,
-.chat-input-form input,
-.chat-input-form select {
+.chat-filter-form input {
     flex: 1;
     padding: 12px 14px;
     border-radius: 10px;
     border: 1px solid #ccc;
     font-size: 1rem;
-    transition: border 0.2s ease;
 }
 
-.chat-filter-form input:focus,
-.chat-input-form input:focus,
-.chat-input-form select:focus {
+.chat-filter-form input:focus {
     outline: none;
     border-color: #007bff;
 }
 
 .chat-filter-form button,
-.chat-input-form button,
 .chat-refresh-form button {
-    padding: 10px 20px;
+    padding: 10px 22px;
     background-color: #007bff;
     color: white;
     font-weight: 600;
@@ -127,29 +120,28 @@ form {
 }
 
 .chat-filter-form button:hover,
-.chat-input-form button:hover,
 .chat-refresh-form button:hover {
     background-color: #0056b3;
 }
 
 .chat-box {
-    background: #f9fafb;
+    background: #f9fafc;
     border: 1px solid #ddd;
     padding: 20px;
-    border-radius: 12px;
-    height: 450px;
+    border-radius: 14px;
+    height: 480px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     margin-bottom: 16px;
     scroll-behavior: smooth;
 }
 
 .chat-message {
-    max-width: 70%;
+    max-width: 75%;
     padding: 14px 18px;
-    border-radius: 16px;
+    border-radius: 18px;
     background-color: #e4e6eb;
     align-self: flex-start;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
@@ -159,28 +151,34 @@ form {
 }
 
 .chat-message.self {
-    background-color: #d0f0ff;
+    background-color: #daf1ff;
     align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-message.other {
+    background-color: #f0f1f3;
+    border-bottom-left-radius: 4px;
 }
 
 .chat-user {
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     color: #2c3e50;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
 
 .chat-text {
     font-size: 1.05rem;
     color: #222;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    white-space: pre-wrap;
 }
 
 .timestamp {
     font-size: 0.75rem;
     color: #888;
     text-align: right;
-    display: block;
 }
 
 .chat-refresh-form {
@@ -220,6 +218,62 @@ form {
     margin-left: 6px;
 }
 
+/* ✅ NEW INPUT FORM GRID */
+.chat-input-form {
+    margin-bottom: 16px;
+}
+
+.chat-input-grid {
+    display: grid;
+    grid-template-columns: 120px 50px 1fr 100px;
+    gap: 10px;
+    align-items: center;
+}
+
+.chat-input-grid select,
+.chat-input-grid input,
+.chat-input-grid button {
+    height: 44px;
+    font-size: 1rem;
+}
+
+/* ✅ Style the emoji button */
+#emoji-btn {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 1.4rem;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+#emoji-btn:hover {
+    background: #f0f0f0;
+}
+
+.chat-input-grid input[type="text"] {
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}
+
+.chat-input-grid button[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.chat-input-grid button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -230,4 +284,3 @@ form {
         transform: translateY(0);
     }
 }
-
