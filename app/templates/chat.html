@@ -4,14 +4,12 @@
 {% block content %}
 <h2 class="chat-title">Welcome, {{ current_user.username }}</h2>
 
-<!-- Search / Filter -->
 <form method="GET" class="chat-filter-form">
     <input type="text" name="q" placeholder="Search by user or keyword" value="{{ request.args.get('q', '') }}">
     <button type="submit">Search</button>
 </form>
 
 <div class="chat-container">
-    <!-- Chat Box -->
     <div class="chat-box" id="chat-box">
         {% for message in messages %}
             {% if not message.recipient_id or message.recipient_id == current_user.id or message.user_id == current_user.id %}
@@ -31,7 +29,6 @@
         {% endfor %}
     </div>
 
-    <!-- Message Input -->
     <form method="POST" class="chat-input-form">
         <select name="recipient">
             <option value="">Public</option>
@@ -45,7 +42,6 @@
         <button type="submit">Send</button>
     </form>
 
-    <!-- Manual Refresh + Logout -->
     <div class="chat-controls">
         <form method="GET" class="chat-refresh-form">
             <button type="submit">Refresh</button>
@@ -54,46 +50,61 @@
     </div>
 </div>
 
-<!-- Emoji Picker -->
-<script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.5.2/index.min.js" type="module"></script>
-<emoji-picker style="position: fixed; bottom: 80px; right: 30px;"></emoji-picker>
+<script type="module">
+    import 'https://unpkg.com/emoji-picker-element@1.5.2/index.js';
+
+    const picker = document.createElement('emoji-picker');
+    picker.style.position = 'absolute';
+    picker.style.bottom = '120px';
+    picker.style.right = '30px';
+    picker.style.zIndex = '1000';
+    picker.style.display = 'none';
+    document.body.appendChild(picker);
+
+    const input = document.getElementById('message-input');
+
+    // Toggle picker visibility when input is focused
+    input.addEventListener('focus', () => {
+        picker.style.display = 'block';
+    });
+
+    input.addEventListener('blur', () => {
+        setTimeout(() => picker.style.display = 'none', 200);  // Allow time to click emoji
+    });
+
+    picker.addEventListener('emoji-click', event => {
+        input.value += event.detail.unicode;
+        input.focus();
+    });
+</script>
 
 <script>
-const picker = document.querySelector('emoji-picker');
-const input = document.getElementById('message-input');
-picker.addEventListener('emoji-click', event => {
-    input.value += event.detail.unicode;
-});
+    window.onload = () => {
+        const chatBox = document.getElementById("chat-box");
+        chatBox.scrollTop = chatBox.scrollHeight;
+    };
 
-// Auto-scroll on load
-window.onload = () => {
-    const chatBox = document.getElementById("chat-box");
-    chatBox.scrollTop = chatBox.scrollHeight;
-};
+    setInterval(() => {
+        fetch(window.location.href)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, "text/html");
+                const newChatBox = doc.querySelector("#chat-box");
+                const chatBox = document.querySelector("#chat-box");
 
-// Auto-refresh with smooth update
-setInterval(() => {
-    fetch(window.location.href)
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-            const newChatBox = doc.querySelector("#chat-box");
-            const chatBox = document.querySelector("#chat-box");
-
-            if (newChatBox && chatBox) {
-                const isAtBottom = Math.abs(chatBox.scrollTop + chatBox.clientHeight - chatBox.scrollHeight) < 30;
-                const prevScroll = chatBox.scrollTop;
-
-                chatBox.innerHTML = newChatBox.innerHTML;
-
-                if (isAtBottom) {
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                } else {
-                    chatBox.scrollTop = prevScroll;
+                if (newChatBox && chatBox) {
+                    const isAtBottom = Math.abs(chatBox.scrollTop + chatBox.clientHeight - chatBox.scrollHeight) < 30;
+                    const prevScroll = chatBox.scrollTop;
+                    chatBox.innerHTML = newChatBox.innerHTML;
+                    if (isAtBottom) {
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    } else {
+                        chatBox.scrollTop = prevScroll;
+                    }
                 }
-            }
-        });
-}, 5000);
+            });
+    }, 5000);
 </script>
+
 {% endblock %}
